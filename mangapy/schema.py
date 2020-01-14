@@ -54,7 +54,7 @@ class Library(DB.Model):
 def initialize_db():
     if not os.path.exists('mangapy.db'):
         DB.create_all()
-        lib = Library('/home/docker/dionysus/manga/manga') # todo: remove this
+        lib = Library('/manga') # todo: remove this
         DB.session.add(lib)
         DB.session.commit()
 
