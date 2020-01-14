@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+# SPDX-License-Identifier: AGPL-3.0-or-later
 
 import os
+import re
 
 from flask import Flask
 from flask_restful import Api, Resource
@@ -15,6 +17,8 @@ APP.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///mangapy.db'
 DB: SQLAlchemy = SQLAlchemy(APP)
 API = Api(APP)
 
+chapter_re = re.compile(r'(?:Ch\.?)?(\d+)')
+
 
 class Chapter(DB.Model):
 
@@ -24,6 +28,13 @@ class Chapter(DB.Model):
 
     def __init__(self, chapter_path):
         self.path = chapter_path
+
+    @property
+    def number(self):
+        reg_chap = chapter_re.findall(self.path)
+        if len(reg_chap) == 1:
+            return reg_chap[0]
+        return reg_chap
 
 
 class Manga(DB.Model):
@@ -54,7 +65,7 @@ class Library(DB.Model):
 def initialize_db():
     if not os.path.exists('mangapy.db'):
         DB.create_all()
-        lib = Library('/manga') # todo: remove this
+        lib = Library('/manga')  # todo: remove this
         DB.session.add(lib)
         DB.session.commit()
 

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# SPDX-License-Identifier: AGPL-3.0-or-later
 
 import os
 from pathlib import Path
@@ -25,4 +26,10 @@ def library_crawler(library_path: Path):
     DB.session.commit()
 
 
-library_crawler(Path(lib_path))
+def just_list(library_path):
+    for chapter in DB.session.query(Chapter):
+        print(chapter.path, chapter.number)
+
+
+# library_crawler(Path(lib_path))
+just_list(Path(lib_path))
