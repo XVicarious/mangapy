@@ -4,22 +4,21 @@
 import os
 from pathlib import Path
 
-from schema import DB, Manga, Chapter
+from schema import DB, Manga, Chapter, Library
 
 lib_path = '/manga'
 
 
 def library_crawler(library_path: Path):
+    library = DB.session.query(Library).filter(Library.path == str(library_path)).first()
     for series in os.listdir(library_path):
         manga = DB.session.query(Manga).filter(Manga.path == series).first()
         if not manga:
-            manga = Manga(series, lib_path)
-            DB.session.add(manga)
+            manga = Manga(series)
+            library.manga.extend([manga])
         for chapter in os.listdir(library_path / series):
-            print('checking if {0} exists'.format(chapter))
-            chap = DB.session.query(Chapter).filter(Chapter.path == chapter, Chapter.manga == manga._id).first()
+            chap = DB.session.query(Chapter).filter(Chapter.path == chapter, Chapter.manga == manga).first()
             if chap:
-                print('it does, continue')
                 continue
             chap = Chapter(chapter)
             manga.chapters.extend([chap])
@@ -31,5 +30,5 @@ def just_list(library_path):
         print(chapter.path, chapter.number)
 
 
-# library_crawler(Path(lib_path))
-just_list(Path(lib_path))
+library_crawler(Path(lib_path))
+# just_list(Path(lib_path))

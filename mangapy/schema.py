@@ -2,7 +2,9 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 import os
+from pathlib import Path
 import re
+import zipfile
 
 from flask import Flask
 from flask_restful import Api, Resource
@@ -17,17 +19,20 @@ APP.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///mangapy.db'
 DB: SQLAlchemy = SQLAlchemy(APP)
 API = Api(APP)
 
-chapter_re = re.compile(r'(?:Ch\.?)?(\d+)')
+chapter_re = re.compile(r'Ch\.(\d+(?:\.\d+)?)')
 
 
 class Chapter(DB.Model):
 
     _id = DB.Column('id', DB.Integer, primary_key=True)
     path = DB.Column(DB.Unicode)
-    manga = DB.Column(DB.Integer, ForeignKey('manga_manga.id'))
+    _manga_id = DB.Column(DB.Integer, ForeignKey('manga_manga.id'))
+    manga = relationship("Manga", back_populates='chapters')
+    #_number = DB.Column(DB.Unicode)
 
-    def __init__(self, chapter_path):
+    def __init__(self, chapter_path):#, chapter_num):
         self.path = chapter_path
+        #self._number = chapter_num
 
     @property
     def number(self):
@@ -36,19 +41,31 @@ class Chapter(DB.Model):
             return reg_chap[0]
         return reg_chap
 
+    @property
+    def pages(self):
+        return len(zipfile.ZipFile(self.full_path).namelist())
+
+    @property
+    def full_path(self):
+        return str(Path(self.manga.full_path, self.path))
+
 
 class Manga(DB.Model):
 
     __tablename__ = 'manga_manga'
 
     _id = DB.Column('id', DB.Integer, primary_key=True)
-    library = DB.Column(DB.Unicode, ForeignKey('manga_library.path'))
+    _library_id = DB.Column(DB.Integer, ForeignKey('manga_library.id'))
+    library = relationship("Library", back_populates='manga')
     path = DB.Column(DB.Unicode)
-    chapters = relationship(Chapter.__name__)
+    chapters = relationship(Chapter.__name__, back_populates='manga')
 
-    def __init__(self, manga_path, library_path):
+    def __init__(self, manga_path):
         self.path = manga_path
-        self.library = library_path
+
+    @property
+    def full_path(self):
+        return str(Path(self.library.path, self.path))
 
 
 class Library(DB.Model):
@@ -57,6 +74,7 @@ class Library(DB.Model):
 
     _id = DB.Column('id', DB.Integer, primary_key=True)
     path = DB.Column(DB.Unicode)
+    manga = relationship(Manga.__name__, back_populates='library')
 
     def __init__(self, library_path: str):
         self.path = library_path
