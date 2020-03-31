@@ -3,10 +3,17 @@
 
 import os
 from pathlib import Path
+import re
 
-from schema import DB, Manga, Chapter, Library
+from schema import DB, Manga, Chapter, Library, Volume, APP
 
-lib_path = '/manga'
+lib_path = '/home/docker/dionysus/manga/manga'
+
+chapter_regex = re.compile(r'(?:Vol\.(?P<volume>\d+) )?(?:Ch\.(?P<chapter>\d+)(\.(?P<part>\d+))?)?')
+
+
+def deep_anal(chap: Chapter):
+    pass
 
 
 def library_crawler(library_path: Path):
@@ -20,7 +27,15 @@ def library_crawler(library_path: Path):
             chap = DB.session.query(Chapter).filter(Chapter.path == chapter, Chapter.manga == manga).first()
             if chap:  # if the chapter already exists, continue on
                 continue
-            chap = Chapter(chapter)
+            chap_match = chapter_regex.match(chapter)
+            volume_number = chap_match.group('volume')
+            chap = Chapter(chapter, chap_match.group('chapter'), chap_match.group('part'))
+            if volume_number:  # if we get a volume number, find/create it, and add the chapter
+                volume = DB.session.query(Volume).filter(Volume.manga == manga, Volume.number == volume_number).first()
+                if not volume:
+                    volume = Volume(volume_number)
+                    manga.volumes.extend([volume])
+                volume.chapters.extend([chap])
             manga.chapters.extend([chap])
     DB.session.commit()
 
