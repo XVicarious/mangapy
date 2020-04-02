@@ -1,0 +1,31 @@
+<!doctype html>
+<title>Editing {{ mydict.manga.title or mydict.manga.path }}</title>
+<div>
+  <label for="title">Title</label><input type="text" id="title" value="{{ mydict.manga.title or mydict.manga.path }}"><br/>
+  <label for="path">Path</label><input type="text" id="path" value="{{ mydict.manga.path }}" disabled="true"><br/>
+  <label for="lib">Library</label>
+  <select id="lib">
+    {% for library in mydict.defaults.libraries %}
+    <option value="{{ library[0] }}" {% if library[0] == mydict.manga.library %}selected="true"{% endif %}>{{ library[1] }}</option>
+    {% endfor %}
+  </select><br/>
+  <label for="release">Release Date</label><input type="date" id="release">
+  <table>
+    <th>
+      <td>Volumes</td>
+    </th>
+    {% for volume in mydict.manga.volumes|sort(attribute="number") %}
+    <tr>
+      <td><a href="/edit/volume?id={{ volume.id }}">Volume {{ volume.number }}</a></td>
+      {% for chapter in mydict.manga.chapters|sort(attribute="number,part") %}
+      {% if volume.id == chapter.volume %}<td><a href="/edit/chapter?id={{ chapter.id }}">Chapter {{ chapter.number }}{{ ".{}".format(chapter.part) or "" }}</a></td>{% endif %}
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </table>
+  <table>
+    <th>
+      <td>Chapters</td>
+    </th>
+  </table>
+</div>

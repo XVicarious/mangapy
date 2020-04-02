@@ -10,8 +10,9 @@ from io import BytesIO
 from flask import send_file
 from flask_restful import Resource
 from pathlib import Path
-from crawler import library_crawler
-from schema import APP, API, Manga, DB, Chapter, Library, Volume
+from mangapy.crawler import library_crawler
+from mangapy.schema import APP, API, Manga, DB, Chapter, Library, Volume
+from mangapy import edit
 
 manga_path = '/<string:manga_id>'
 volume_path = manga_path + '/v/<string:volume>'
@@ -132,4 +133,5 @@ if __name__ == '__main__':
         DB.create_all()
         DB.session.commit()
     check_libs()
+    APP.register_blueprint(edit.bp)
     APP.run(debug=True, host='0.0.0.0')

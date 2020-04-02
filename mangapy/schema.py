@@ -69,6 +69,7 @@ class Manga(DB.Model):
     _library_id = DB.Column(DB.Integer, ForeignKey('manga_library.id'))
     library = relationship("Library", back_populates='manga')
     path = DB.Column(DB.Unicode)
+    title = DB.Column(DB.Unicode)
     chapters = relationship(Chapter.__name__, back_populates='manga')
     volumes = relationship(Volume.__name__, back_populates='manga')
 
